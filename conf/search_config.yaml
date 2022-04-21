@@ -1,0 +1,25 @@
+# This configuration file contains query parameters for openrent search endpoint. 
+
+# It can contain multiple searches for flathunters looking in multiple areas
+
+search_001:
+ term: Manor House, London
+ area: 2
+#  prices_min: 100
+#  prices_max: 3500
+#  bedrooms_min: 3
+#  bedrooms_max: 4
+#  furnishedType: 1
+#  acceptStudents: 
+#  acceptNonStudents: 
+#  acceptDSS: 
+#  acceptPets: 
+#  includeBills: 
+#  hasGarden: 
+#  hasParking: 
+#  hasFireplace: 
+#  videoTour: 
+#  isLive: 
+#  priceperweek: 
+#  minTenancy: 
+#  availableBefore: 28/04/2022 # DD/MM/YYYY

@@ -6,4 +6,6 @@ This tool takes a set of search queries and filter options to automatically find
 
 TBC
 
-# Authors
+## Authors
+
+Kenny Fitzgerald

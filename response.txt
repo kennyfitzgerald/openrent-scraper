@@ -1,0 +1,314 @@
+# Standard library imports
+import random
+import time
+import urllib
+import re
+
+# Third party library imports
+import requests
+from bs4 import BeautifulSoup
+
+# Local library imports
+from openrent.configloader import ConfigLoader
+
+config = ConfigLoader('conf/search_config.yaml', 0)
+
+params = config.config
+
+URL_ENDPOINT = 'https://www.openrent.co.uk/properties-to-rent/'
+ADVERTS_URLS_SELECTOR = 'a.pli.l-a.clearfix'
+# ADVERTS_URLS_SELECTOR = 'div.property-row-carousel.swiper'
+
+class Search():
+    """ This class scrapes openrent for adverts and saves data into 
+        a csv file to avoid repeating notifications. 
+
+        The search parameters for an individual search can be found in 
+        the conf/search_config.yaml file.
+    """
+
+    def __init__(self, params, max_age):
+        """ Initialise the parameters and get the search URL as per the 
+            specified query. Also loads historical data for avoidance
+            of repeated listings
+
+            Args:
+                params: Dictionary containg query string parameters for 
+                making HTTP request
+                max_age: Maximum age of listing to pull
+        """
+        self.params = params
+        self.max_age = max_age
+
+    def _encode_url(self, params):
+
+        term = params['term']
+        term = re.sub('[^A-Za-z0-9 ]', '', term)
+        term = re.sub('\s+', '-', term).lower()
+
+        query_string = urllib.parse.urlencode(params)
+
+        url = f'{URL_ENDPOINT}{term}?{query_string}'
+
+        return url
+
+
+    def _make_request(self, url, params=None):
+        
+        session = requests.session()
+
+        response = session.get(url)
+
+        # Raise any HTTP status errors
+        response.raise_for_status()
+
+        # Be gentle with the requests!
+        time.sleep(random.randint(0, 3))
+
+        return response
+
+
+    def _pull_results(self):
+        
+        url = self._encode_url(params=self.params)
+
+        response = self._make_request(url=url)
+
+        num_results = self._get_number_of_results(response)
+
+        scroll_to_result = list(range(0, num_results+1, 10))
+
+        listings = []
+
+        for i in scroll_to_result:
+
+            if i!=0:
+                params = self.params
+                params['viewingProperty'] = str(i)
+                url = self._encode_url(params)
+                response = self._make_request(url=url)
+                print(params)
+                print(response.url)
+            
+            page = BeautifulSoup(response.content, 'html.parser')
+
+            listings.append(page.select(ADVERTS_URLS_SELECTOR))
+
+        listings = [item for sublist in listings for item in sublist]
+
+        return listings
+
+
+    def _get_number_of_results(self, response):
+        
+        page = BeautifulSoup(response.content, 'html.parser')
+
+        print(response.url)
+
+        with open('response.html', 'w', encoding="utf-8") as f:
+            f.write(response.text)
+
+        num_results = int(page.select('span.prop-count')[0].text)
+
+        return num_results
+
+
+    def _get_listing_id(self, listing_html):
+        pass
+
+    def _get_listing_status(self, listing_html):
+        pass
+
+# params['viewingProperty'] = '40'
+
+# params = {k:str(v) for k,v in params.items() if v is not None}
+
+
+# session = requests.session()
+
+# response = session.get(URL_ENDPOINT, headers=params)
+
+# response.url
+
+search = Search(params, 2)
+
+results = search._pull_results()
+
+len(set(results))
+
+# len(results)
+
+# term = params['term']
+
+
+
+# ADVERTS_URLS_SELECTOR = 'span.prop-count'
+
+
+# url = 'https://www.openrent.co.uk/properties-to-rent/seven-sisters-london?term=seven+sisters%2C+london&area=1&prices_min=100&prices_max=3496&bedrooms_min=3&bedrooms_max=4&furnishedType=1&acceptStudents=None&acceptNonStudents=None&acceptDSS=None&acceptPets=None&includeBills=None&hasGarden=None&hasParking=None&hasFireplace=None&videoTour=None&isLive=None&priceperweek=None&minTenancy=None&availableBefore=28%2F04%2F2022'
+
+# session = requests.session()
+
+# response = session.get(url)
+
+# response.url
+
+# response.text
+
+# with open('response.html', 'w', encoding="utf-8") as f:
+#     f.write(response.text)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Standard library imports
+import random
+import time
+
+# Third party library imports
+import requests
+from bs4 import BeautifulSoup
+from lxml import html
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+
+
+# Local library imports
+from openrent.configloader import ConfigLoader
+
+config = ConfigLoader('conf/search_config.yaml', 0)
+
+params = config.config
+
+URL_ENDPOINT = 'https://www.openrent.co.uk/properties-to-rent/'
+ADVERTS_URLS_SELECTOR = 'a.pli.l-a.clearfix'
+# ADVERTS_URLS_SELECTOR = 'div.property-row-carousel.swiper'
+
+class Search():
+    """ This class scrapes openrent for adverts and saves data into 
+        a csv file to avoid repeating notifications. 
+
+        The search parameters for an individual search can be found in 
+        the conf/search_config.yaml file.
+    """
+
+    def __init__(self, params, max_age):
+        """ Initialise the search query. Also loads historical data for avoidance
+            of repeated listings
+
+            Args:
+                params: Dictionary containg query string parameters for 
+                making HTTP request
+                max_age: Maximum age of listing to pull
+        """
+        self.params = params
+        self.max_age = max_age
+        self.driver = self._get_driver()
+
+    def _get_driver(self):
+
+        options = Options()
+        options.add_argument('--headless')
+        driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
+
+        return driver
+
+    def _make_request(self, url, params=None):
+        
+        session = requests.session()
+
+        response = session.get(url, params=params, headers='')
+
+        # Raise any HTTP status errors
+        response.raise_for_status()
+
+        # Be gentle with the requests!
+        time.sleep(random.randint(0, 3))
+
+        return response
+
+    def _pull_results(self):
+        
+        response = self._make_request(url=URL_ENDPOINT, params=self.params)
+
+        listings = []
+
+        for i in scroll_to_result:
+
+            if i!=0:
+                params = self.params
+                params['viewingProperty'] = str(i)
+                response = self._make_request(url=URL_ENDPOINT, params=params)
+                print(params)
+                print(response.url)
+            
+            page = BeautifulSoup(response.content, 'html.parser')
+
+            listings.append(page.select(ADVERTS_URLS_SELECTOR))
+
+        listings = [item for sublist in listings for item in sublist]
+
+        return listings
+
+
+    def _get_number_of_results(self, response):
+        
+        page = BeautifulSoup(response.content, 'html.parser')
+
+        num_results = int(page.select('span.prop-count')[0].text)
+
+        return num_results
+
+
+    def _get_listing_id(self, listing_html):
+        pass
+
+    def _get_listing_status(self, listing_html):
+        pass
+
+
+params['viewingProperty'] = '40'
+
+params = {k:str(v) for k,v in params.items() if v is not None}
+
+urllib.parse.urlencode(params)
+
+session = requests.session()
+
+response = driver.get(URL_ENDPOINT
+
+page_source = driver.page_source
+
+response.json
+
+response.text
+
+search = Search(params, 2)
+
+results = search._pull_results()
+
+len(results)
+
+
+with open('response.html', 'w', encoding="utf-8") as f:
+    f.write(page_source)
+
+# ADVERTS_URLS_SELECTOR = 'span.prop-count'
