@@ -25,10 +25,6 @@ import numpy as np
 # Local library imports
 from openrent.configloader import ConfigLoader
 
-config = ConfigLoader('conf/search_config.yaml', 0)
-
-params = config.config
-
 URL_BASE = 'https://www.openrent.co.uk/'
 URL_ENDPOINT = 'https://www.openrent.co.uk/properties-to-rent/'
 ADVERTS_URLS_SELECTOR = 'a.pli.clearfix'
@@ -42,16 +38,16 @@ class Search():
         the conf/search_config.yaml file.
     """
 
-    def __init__(self, params):
+    def __init__(self, config_file, search_num):
         """ Initialise the search query. Also loads historical data for avoidance
             of repeated listings
 
             Args:
-                params: Dictionary containg query string parameters for 
-                making HTTP request
-                max_age: Maximum age of listing to pull
+                config_file: yaml file containing at least 1 search config params
+                search_num: The number of the search as ordered within the config file
         """
-        self.params = params
+        self.config = ConfigLoader(config_file, search_num)
+        self.params = self.config.config
         self.driver = self._get_driver()
         self.url = self._encode_url(self.params)
         self.results = self.search()
@@ -273,26 +269,13 @@ class Search():
                 columns=list(new_results.columns)
             ).astype(new_results.dtypes.to_dict())
 
-        updated = pd.merge(existing, new_results, on='id', how='outer', suffixes=["_existing", "_new"]).convert_dtypes()
-
-        # timestamps need setting to correct tz
-        updated[[
-            'created_at_existing',
-            'let_agreed_at_existing',
-            'created_at_new',
-            'let_agreed_at_new'
-        ]] = updated[[
-            'created_at_existing',
-            'let_agreed_at_existing',
-            'created_at_new',
-            'let_agreed_at_new'
-        ]].apply(pd.to_datetime, format='%Y-%m-%d %H:%M:%S.%f')
+        updated = pd.merge(existing, new_results, on='id', how='outer', suffixes=["_existing", "_new"])
 
         # Mark new listings 
         updated['new_listing'] = updated['created_at_existing'].isna()
 
         # Mark change in let agreed
-        updated['let_agreed_since_last_run'] = updated['let_agreed_new']!=updated['let_agreed_existing']
+        updated['let_agreed_since_last_run'][~updated['new_listing']] = np.where((~updated['let_agreed_new'].isna()) & (updated['let_agreed_existing'].isna()), True, False)
 
         updated['let_agreed_since_last_run'].fillna(value=False, inplace=True)
 
@@ -305,6 +288,26 @@ class Search():
 
         # Updated let agreed at values 
         updated['let_agreed_at'] = np.where((~updated['new_listing']) & (updated['let_agreed_since_last_run']), updated['let_agreed_at_new'], updated['let_agreed_at'])
+        
+        # Convert Dtypes
+        updated = updated.convert_dtypes()
+
+        # timestamps need setting to correct tz
+        updated[[
+            'created_at_existing',
+            'let_agreed_at_existing',
+            'created_at_new',
+            'let_agreed_at_new',
+            'let_agreed_at',
+            'created_at',
+        ]] = updated[[
+            'created_at_existing',
+            'let_agreed_at_existing',
+            'created_at_new',
+            'let_agreed_at_new',
+            'let_agreed_at',
+            'created_at',
+        ]].apply(pd.to_datetime, format='%Y-%m-%d %H:%M:%S.%f', utc=True)
 
         return updated
     
@@ -340,4 +343,4 @@ class Search():
 
         return final_results
 
-# search = Search(params)
+search = Search('conf/search_config.yaml', 0)
