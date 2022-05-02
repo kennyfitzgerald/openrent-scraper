@@ -4,6 +4,8 @@ import time
 import re
 from datetime import datetime, timezone
 from os.path import exists
+from re import S, sub
+from decimal import Decimal
 
 # Third party library imports
 import requests
@@ -12,11 +14,13 @@ from lxml import html
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import urllib
 from dateutil import relativedelta as rd
 import pandas as pd
 import numpy as np
-
 
 # Local library imports
 from openrent.configloader import ConfigLoader
@@ -28,10 +32,10 @@ params = config.config
 URL_BASE = 'https://www.openrent.co.uk/'
 URL_ENDPOINT = 'https://www.openrent.co.uk/properties-to-rent/'
 ADVERTS_URLS_SELECTOR = 'a.pli.clearfix'
-LISTING_ID_SELECTOR = 'div.property-row-carousel.swiper'
+MAPS_XPATH_SELECTOR = '/html/body/div[4]/div[2]/section/div[2]/div/div/div/div/div[1]/div[5]/div/div[1]/img[1]'
 
 class Search():
-    """ This class scrapes openrent for adverts and saves data into 
+    """ This class scrapes openrent for adverts & saves data into 
         a csv file to avoid repeating notifications. 
 
         The search parameters for an individual search can be found in 
@@ -50,8 +54,7 @@ class Search():
         self.params = params
         self.driver = self._get_driver()
         self.url = self._encode_url(self.params)
-        self.page = self._pull_results()
-        self.new_results = self._parse_results()
+        self.results = self.search()
 
     def _get_driver(self):
 
@@ -87,9 +90,9 @@ class Search():
 
         return response
 
-    def _pull_results(self):
+    def _pull_results(self, url):
         
-        self.driver.get(self.url)
+        self.driver.get(url)
 
         pre_scroll_height = self.driver.execute_script('return document.body.scrollHeight;')
 
@@ -107,20 +110,25 @@ class Search():
             if scrolled:
                 run_time = 0
                 pre_scroll_height = post_scroll_height
-            elif not scrolled and not timed_out:
+            elif (not scrolled) & (not timed_out):
                 run_time += time.time() - iteration_start
-            elif not scrolled and timed_out:
+            elif not scrolled & timed_out:
                 break
 
         html = self.driver.page_source
 
         page = BeautifulSoup(html)
 
+        self.driver.refresh()
+        time.sleep(1)
+
         return page
 
-    def _parse_results(self):
+    def _parse_results(self, url):
+        
+        page = self._pull_results(url)
 
-        listings = self.page.select(ADVERTS_URLS_SELECTOR)
+        listings = page.select(ADVERTS_URLS_SELECTOR)
 
         results_parsed = []
 
@@ -129,21 +137,133 @@ class Search():
             result = {
                 "id":self._get_listing_id(l),
                 "created_at":datetime.now(timezone.utc),
-                "updated_at":self._get_last_updated(l)[2],
-                "updated_at_total":self._get_last_updated(l)[0],
-                "updated_at_unit":self._get_last_updated(l)[1],
-                "updated_at_seconds":self._get_last_updated(l)[3],
-                "let_agreed":self._get_let_agreed(l)
+                "let_agreed":self._get_let_agreed(l),
+                "let_agreed_at":datetime.now(timezone.utc) if self._get_let_agreed(l) else None
             }
 
             results_parsed.append(result)
         
         results_parsed = pd.DataFrame(results_parsed)
-        results_parsed = results_parsed.sort_values(by=['updated_at'], ascending=False).reset_index(drop=True).convert_dtypes()
+
+        results_parsed = results_parsed.sort_values(by=['created_at'], ascending=False).reset_index(drop=True).convert_dtypes()
         
         return results_parsed
+    
+    def _get_listing_id(self, listing_html):
+            
+        for div in listing_html.find_all("div"):
+            if div.get('data-listing-id'):
+                listing_id = int(div.get('data-listing-id'))
+                break
 
-    def _update_dataset(self):
+        return listing_id
+
+
+    def _get_let_agreed(self, listing_html):
+                
+        let_agreed = len(listing_html.find_all("span", {"class":"let-agreed"})) == 1
+
+        return let_agreed
+
+
+    def _get_listing_details(self, listing_id):
+
+        def _extract_bool_from_html(html_list, ind):
+
+            html = html_list[ind].find("i")['class']
+            bool = ' '.join(html)!="fa fa-times"
+
+            return bool
+        
+        url = f'{URL_BASE}{listing_id}'
+
+        self.driver.get(url)
+        self.driver.implicitly_wait(2)
+        WebDriverWait(self.driver,20).until(EC.element_to_be_clickable((By.XPATH, MAPS_XPATH_SELECTOR))).click()
+
+        time.sleep(1.5)
+        result = None
+        response = self.driver.page_source
+
+        while not result:
+            result = re.search('LatLng\((.*)\);', response)
+
+        latlong = result.group(1).split(",")
+        lat = float(latlong[0])
+        lng = float(latlong[1])
+
+        soup = BeautifulSoup(response)
+
+        title = soup.find_all("h1", {"class":"property-title"})[0].string
+
+        overview = soup.find_all("table", {"class":"table table-striped intro-stats"})[0]
+        bedrooms, bathrooms, max_tenants, location  = [x.string for x in overview.find_all("strong")]
+        description = soup.find_all("div", {"class":"description"})[0].text
+
+        features = soup.find_all("table", {"class":"table table-striped"})
+        price_bills = features[0].find_all("td")
+        deposit = float(sub(r'[^\d.]', '', price_bills[1].text))
+        rent_total = float(sub(r'[^\d.]', '', price_bills[3].text))
+        bills_included = _extract_bool_from_html(price_bills, 5)
+
+        tenant_preference = features[1].find_all("td")
+        student_friendly = _extract_bool_from_html(tenant_preference, 1)
+        families_allowed = _extract_bool_from_html(tenant_preference, 3)
+        pets_allowed = _extract_bool_from_html(tenant_preference, 5)
+        smokers_allowed = _extract_bool_from_html(tenant_preference, 7)
+        dss_lha_covers_rent = _extract_bool_from_html(tenant_preference, 9)
+
+        availability = features[2].find_all("td")
+        available_from = availability[1].text
+        minimum_tenancy = availability[3].text
+
+        additional_features = features[3].find_all("td")
+        has_garden = _extract_bool_from_html(additional_features, 1)
+        has_parking = _extract_bool_from_html(additional_features, 3)
+        has_fireplace = _extract_bool_from_html(additional_features, 5)
+        furnished = additional_features[7].text
+        epc_rating = additional_features[9].text
+
+        transport = [x.text.replace('\r', '').replace('\n', '').strip() for x in soup.find_all("table", {"class":"table table-striped mt-1"})[0].find_all('td', text=True)]
+        closest_station = transport[2]
+        closest_station_mins = int(transport[3].split(' ')[0])
+        second_closest_station = transport[4]
+        second_closest_station_mins = int(transport[5].split(' ')[0])
+        
+        listing_details = {
+                "title":title,
+                "location":location,
+                "lat":lat,
+                "lng":lng,
+                "bedrooms":bedrooms,
+                "bathrooms":bathrooms,
+                "max_tenants":max_tenants,
+                "description":description,
+                "deposit":deposit,
+                "rent_total":rent_total,
+                "bills_included":bills_included,
+                "student_friendly":student_friendly,
+                "families_allowed":families_allowed,
+                "pets_allowed":pets_allowed,
+                "smokers_allowed":smokers_allowed,
+                "dss_1ha_covers_rent":dss_lha_covers_rent,
+                "available_from":available_from,
+                "minimum_tenancy":minimum_tenancy,
+                "has_garden":has_garden,
+                "has_parking":has_parking,
+                "has_fireplace":has_fireplace,
+                "furnished":furnished,
+                "epc_rating":epc_rating,
+                "closest_station":closest_station,
+                "closest_station_mins":closest_station_mins,
+                "second_closest_station":second_closest_station,
+                "second_closest_station_mins":second_closest_station_mins
+            }
+        
+        return listing_details 
+
+
+    def _update_records(self, new_results):
         
         if exists('data/results.csv'):
             # Read existing data
@@ -158,102 +278,66 @@ class Search():
         # timestamps need setting to correct tz
         updated[[
             'created_at_existing',
-            'updated_at_existing',
+            'let_agreed_at_existing',
             'created_at_new',
-            'updated_at_new'
+            'let_agreed_at_new'
         ]] = updated[[
             'created_at_existing',
-            'updated_at_existing',
+            'let_agreed_at_existing',
             'created_at_new',
-            'updated_at_new'
+            'let_agreed_at_new'
         ]].apply(pd.to_datetime, format='%Y-%m-%d %H:%M:%S.%f')
 
         # Mark new listings 
         updated['new_listing'] = updated['created_at_existing'].isna()
 
         # Mark change in let agreed
-        updated['let_agreed_ts'] = updated['let_agreed_new']==updated['let_agreed_existing']
+        updated['let_agreed_since_last_run'] = updated['let_agreed_new']!=updated['let_agreed_existing']
 
-        # Set unified created_at column (AKA first seen at)
-        updated['created_at'] = np.where(updated['created_at_existing'].notna(), updated['created_at_existing'], updated['created_at_new'])
+        updated['let_agreed_since_last_run'].fillna(value=False, inplace=True)
 
-        # Check if listing has been updated
+        # Update new records
+        updated['created_at'] = np.where(updated['new_listing'], updated['created_at_new'], updated['created_at_existing'])
 
-        updated.updated_at_seconds_existing.fillna(updated.updated_at_seconds_new, inplace=True)
-        updated.updated_at_seconds_new.fillna(updated.updated_at_seconds_existing, inplace=True)
+        updated['let_agreed'] = np.where(updated['new_listing'], updated['let_agreed_new'], updated['let_agreed_existing'])
 
-        updated.updated_at_total_existing.fillna(updated.updated_at_total_new, inplace=True)
-        updated.updated_at_total_new.fillna(updated.updated_at_total_existing, inplace=True)
+        updated['let_agreed_at'] = np.where(updated['new_listing'], updated['let_agreed_at_new'], updated['let_agreed_at_existing'])
+
+        # Updated let agreed at values 
+        updated['let_agreed_at'] = np.where((~updated['new_listing']) & (updated['let_agreed_since_last_run']), updated['let_agreed_at_new'], updated['let_agreed_at'])
+
+        return updated
+    
+    def _update_new_listing_details(self, df):
+
+        ids_to_update = list(df['id'][df['new_listing']==True])
+
+        df = df.set_index('id')
+
+        for id in ids_to_update:
+            d = self._get_listing_details(id)
+            for key in d.keys():
+                if not key in df.columns:
+                    df[key] = None
+                df.loc[id, key] = d.get(key)
         
-        updated.updated_at_unit_existing.fillna(updated.updated_at_unit_new, inplace=True)
-        updated.updated_at_unit_new.fillna(updated.updated_at_unit_existing, inplace=True)
+        return df
 
-        updated['updated_at'] = np.where(
-            updated['updated_at_seconds_new'] > updated['updated_at_seconds_existing'], 
-            updated['updated_at_new'], 
-            updated['updated_at_existing']
-        )
-        updated.updated_at.fillna(updated.updated_at_existing, inplace=True)
+    def search(self):
 
-        
-        updated['updated_at_total'] = np.where(
-            updated['updated_at_seconds_new'] > updated['updated_at_seconds_existing'], 
-            updated['updated_at_total_new'], 
-            updated['updated_at_total_existing']
-        )
-        updated.updated_at_total.fillna(updated.updated_at_total_existing, inplace=True)
+        parsed_results = self._parse_results(self.url)
 
-        updated['updated_at_unit'] = np.where(
-            updated['updated_at_seconds_new'] > updated['updated_at_seconds_existing'], 
-            updated['updated_at_unit_new'], 
-            updated['updated_at_unit_existing']
-        )
-        updated.updated_at_unit.fillna(updated.updated_at_unit_existing, inplace=True)
+        updated_results = self._update_records(parsed_results)
 
+        final_results = self._update_new_listing_details(updated_results)
 
+        # remove_cols
+        final_results = final_results.loc[:,~final_results.columns.str.endswith('_existing')]
+        final_results = final_results.loc[:,~final_results.columns.str.endswith('_new')]
+        # final_results = final_results.drop(labels=['new_listing', 'let_agreed_since_last_run'])
 
-        pass
+        final_results.to_csv('data/results.csv')
 
+        return final_results
 
-    def _get_listing_id(self, listing_html):
-                
-        for div in listing_html.find_all("div"):
-            if div.get('data-listing-id'):
-                listing_id = int(div.get('data-listing-id'))
-                break
-
-        return listing_id
-
-
-    def _get_last_updated(self, listing_html):
-
-            last_updated = re.sub(" Last Updated around | ago", "", listing_html.find("div", attrs={"class":"timeStamp"}).text)
-
-            if last_updated[len(last_updated)-1] != 's':
-                last_updated = f"{last_updated}s"
-            
-            if last_updated[0]=='a':
-                last_updated = last_updated.replace('a', '1', 1)
-
-            parsed_s = [last_updated.split()[:2]]
-            time_dict = dict((fmt,float(amount)) for amount,fmt in parsed_s)
-            last_updated_ts = datetime.now() - rd.relativedelta(**time_dict)
-            seconds = last_updated_ts.timestamp()
-
-            last_updated_amount, last_updated_unit = last_updated.split(' ')
-            
-            return int(last_updated_amount), last_updated_unit, last_updated_ts, int(seconds)
-
-
-    def _get_let_agreed(self, listing_html):
-                
-        let_agreed = len(listing_html.find_all("span", {"class":"let-agreed"})) == 1
-
-        return let_agreed
-
-
-search = Search(params)
-
-new_results = search.new_results
-
-# new_results.to_csv('data/results.csv', index=False)
+# search = Search(params)
