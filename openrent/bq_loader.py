@@ -1,65 +1,55 @@
 # Standard library imports
+import json 
 
 # Third party library imports
+from google.cloud import bigquery
 
 # Local library imports
 
-import datetime
 
-from google.cloud import bigquery
-import pandas
-import pytz
+def json_schema_to_list(json_file):
 
-from openrent.configloader import ConfigLoader
+    bigquerySchema = []
 
-class bq_loader:
-    """ A class for reading and writing data from a specified BigQuery project
+    with open(json_file) as f:
+        bigqueryColumns = json.load(f)
+        for col in bigqueryColumns:
+            bigquerySchema.append(bigquery.SchemaField(col['name'], col['type'], col['mode']))
+    
+    return bigquerySchema
+
+def write_df_to_bq(df, schema_json_file, bq_table_ref, client):
+
+    schema = json_schema_to_list(schema_json_file)
+
+    job_config = bigquery.LoadJobConfig(
+        schema=schema,
+        write_disposition="WRITE_TRUNCATE"
+    )
+
+    job = client.load_table_from_dataframe(
+        df, bq_table_ref, job_config=job_config
+    )  # Make an API request.
+    job.result()  # Wait for the job to complete.
+
+    table = client.get_table(bq_table_ref)  # Make an API request.
+    
+    print(
+        "Loaded {} rows and {} columns to {}".format(
+            table.num_rows, len(table.schema), bq_table_ref
+        )
+    )
+
+def read_df_from_bq(bq_table_ref, client):
+
+    query_string = f"""
+    SELECT * FROM {bq_table_ref}
     """
 
-    def __init__(config):
-        self.config = ConfigLoader()
-        self.project = config
-        self.client = bigquery.Client()
-        self.
-
-
-
-
-client = bigquery.Client()
-
-project = 'kenny-personal-projects'
-dataset_id = 'openrent'
-table_id = 'openrent_listings'
-table_ref = f'{project}.{dataset_id}.{table_id}'
-
-job_config = bigquery.LoadJobConfig(
-    write_disposition="WRITE_TRUNCATE"
-)
-
-job = client.load_table_from_dataframe(
-    x, table_id, job_config=job_config
-)  # Make an API request.
-job.result()  # Wait for the job to complete.
-
-table = client.get_table(table_id)  # Make an API request.
-print(
-    "Loaded {} rows and {} columns to {}".format(
-        table.num_rows, len(table.schema), table_id
+    df = (
+        client.query(query_string)
+        .result()
+        .to_dataframe()
     )
-)
-
-query_string = f"""
-SELECT * FROM {table_id}
-"""
-
-dataframe = (
-    client.query(query_string)
-    .result()
-    .to_dataframe()
-)
-
-print(dataframe.head())
-
-dataset_ref = client.dataset(dataset_id, project=project)
-table_ref = dataset_ref.table(table_id)
-table = client.get_table(table_ref)
+    
+    return df

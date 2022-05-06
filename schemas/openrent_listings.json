@@ -1,0 +1,167 @@
+[
+  {
+    "mode": "REQUIRED",
+    "name": "id",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "title",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "location",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "lat",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "lng",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "bedrooms",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "bathrooms",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "max_tenants",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "description",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "deposit",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "rent_total",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "bills_included",
+    "type": "BOOLEAN"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "student_friendly",
+    "type": "BOOLEAN"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "families_allowed",
+    "type": "BOOLEAN"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "pets_allowed",
+    "type": "BOOLEAN"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "smokers_allowed",
+    "type": "BOOLEAN"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "dss_1ha_covers_rent",
+    "type": "BOOLEAN"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "available_from",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "minimum_tenancy",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "has_garden",
+    "type": "BOOLEAN"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "has_parking",
+    "type": "BOOLEAN"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "has_fireplace",
+    "type": "BOOLEAN"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "furnished",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "epc_rating",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "closest_station",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "closest_station_mins",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "second_closest_station",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "second_closest_station_mins",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "new_listing",
+    "type": "BOOLEAN"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "let_agreed_since_last_run",
+    "type": "BOOLEAN"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "created_at",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "let_agreed",
+    "type": "BOOLEAN"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "let_agreed_at",
+    "type": "TIMESTAMP"
+  }
+]

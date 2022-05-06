@@ -38,7 +38,7 @@ class Search():
         the conf/search_config.yaml file.
     """
 
-    def __init__(self, config_file, search_num):
+    def __init__(self, config_file, search_num, existing_data):
         """ Initialise the search query. Also loads historical data for avoidance
             of repeated listings
 
@@ -47,6 +47,7 @@ class Search():
                 search_num: The number of the search as ordered within the config file
         """
         self.config = ConfigLoader(config_file, search_num)
+        self.existing = existing_data
         self.params = self.config.config
         self.driver = self._get_driver()
         self.url = self._encode_url(self.params)
@@ -141,7 +142,7 @@ class Search():
         
         results_parsed = pd.DataFrame(results_parsed)
 
-        results_parsed = results_parsed.sort_values(by=['created_at'], ascending=False).reset_index(drop=True).convert_dtypes()
+        results_parsed = results_parsed.reset_index(drop=True).convert_dtypes()
         
         return results_parsed
     
@@ -261,15 +262,12 @@ class Search():
 
     def _update_records(self, new_results):
         
-        if exists('data/results.csv'):
-            # Read existing data
-            existing = pd.read_csv('data/results.csv').convert_dtypes()
-        else:
-            existing = pd.DataFrame(
+        if len(self.existing) == 0:
+            self.existing = pd.DataFrame(
                 columns=list(new_results.columns)
             ).astype(new_results.dtypes.to_dict())
 
-        updated = pd.merge(existing, new_results, on='id', how='outer', suffixes=["_existing", "_new"])
+        updated = pd.merge(self.existing, new_results, on='id', how='outer', suffixes=["_existing", "_new"])
 
         # Mark new listings 
         updated['new_listing'] = updated['created_at_existing'].isna()
@@ -337,10 +335,10 @@ class Search():
         # remove_cols
         final_results = final_results.loc[:,~final_results.columns.str.endswith('_existing')]
         final_results = final_results.loc[:,~final_results.columns.str.endswith('_new')]
-        # final_results = final_results.drop(labels=['new_listing', 'let_agreed_since_last_run'])
+
+        # Sort results
+        final_results = final_results.sort_values(by=['created_at'], ascending=False)
 
         final_results.to_csv('data/results.csv')
 
         return final_results
-
-search = Search('conf/search_config.yaml', 0)
