@@ -31,7 +31,6 @@ jobs:
           workload_identity_provider: "projects/1012731031602/locations/global/workloadIdentityPools/gh-pool/providers/gh-provider"
           service_account: "github-actions-service-account@kenny-personal-projects.iam.gserviceaccount.com"
 
-
       - name: Setup Python
         uses: actions/setup-python@v2
         with:
