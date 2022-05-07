@@ -18,8 +18,6 @@ if __name__ == "main":
 
     # Load existing data from BigQuery
 
-    # os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'C:\kenny-personal-projects-bq-sa.json'
-
     bq_project = 'kenny-personal-projects'
     bq_dataset_id = 'openrent'
     bq_table_id = 'openrent_listings'
