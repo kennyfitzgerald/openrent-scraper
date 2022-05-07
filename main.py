@@ -18,9 +18,9 @@ if __name__ == "main":
 
     # Load existing data from BigQuery
 
-    bq_project = 'kenny-personal-projects'
-    bq_dataset_id = 'openrent'
-    bq_table_id = 'openrent_listings'
+    bq_project = os.environ['PROJECT_ID']
+    bq_dataset_id = os.environ['DATASET_ID']
+    bq_table_id = os.environ['TABLE_ID']
 
     bq_table_ref = f'{bq_project}.{bq_dataset_id}.{bq_table_id}'
 

@@ -339,6 +339,4 @@ class Search():
         # Sort results
         final_results = final_results.sort_values(by=['created_at'], ascending=False)
 
-        final_results.to_csv('data/results.csv')
-
         return final_results
