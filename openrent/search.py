@@ -19,6 +19,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import urllib
 from dateutil import relativedelta as rd
+from dateutil import parser
 import pandas as pd
 import numpy as np
 
@@ -212,6 +213,8 @@ class Search():
 
         availability = features[2].find_all("td")
         available_from = availability[1].text
+        available_from_ts = datetime.now() if available_from=="Today" else parser.parse(available_from)
+        available_from_ts = available_from_ts.date
         minimum_tenancy = availability[3].text
 
         additional_features = features[3].find_all("td")
@@ -226,9 +229,14 @@ class Search():
         closest_station_mins = int(transport[3].split(' ')[0])
         second_closest_station = transport[4]
         second_closest_station_mins = int(transport[5].split(' ')[0])
+
+        room_only = title.split(',')[0]=='Room in Shared House'
+        rent_per_person = round(rent_total/int(bedrooms), 2) if not room_only else rent_total
         
         listing_details = {
                 "title":title,
+                "room_only":room_only,
+                "rent_per_person":rent_per_person,
                 "location":location,
                 "lat":lat,
                 "lng":lng,
@@ -245,6 +253,7 @@ class Search():
                 "smokers_allowed":smokers_allowed,
                 "dss_1ha_covers_rent":dss_lha_covers_rent,
                 "available_from":available_from,
+                "available_from_ts":available_from_ts,
                 "minimum_tenancy":minimum_tenancy,
                 "has_garden":has_garden,
                 "has_parking":has_parking,
@@ -262,7 +271,8 @@ class Search():
 
     def _update_records(self, new_results):
         
-        if len(self.existing) == 0:
+        if not self.existing:
+            first_run = True
             self.existing = pd.DataFrame(
                 columns=list(new_results.columns)
             ).astype(new_results.dtypes.to_dict())
@@ -273,9 +283,11 @@ class Search():
         updated['new_listing'] = updated['created_at_existing'].isna()
 
         # Mark change in let agreed
-        updated['let_agreed_since_last_run'][~updated['new_listing']] = np.where((~updated['let_agreed_new'].isna()) & (updated['let_agreed_existing'].isna()), True, False)
-
-        updated['let_agreed_since_last_run'].fillna(value=False, inplace=True)
+        if not first_run:
+            updated['let_agreed_since_last_run'][~updated['new_listing']] = np.where((~updated['let_agreed_new'].isna()) & (updated['let_agreed_existing'].isna()), True, False)
+            updated['let_agreed_since_last_run'].fillna(value=False, inplace=True)
+        else:
+            updated['let_agreed_since_last_run'] = False
 
         # Update new records
         updated['created_at'] = np.where(updated['new_listing'], updated['created_at_new'], updated['created_at_existing'])

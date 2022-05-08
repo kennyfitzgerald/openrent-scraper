@@ -6,8 +6,43 @@
   },
   {
     "mode": "NULLABLE",
+    "name": "new_listing",
+    "type": "BOOLEAN"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "let_agreed_since_last_run",
+    "type": "BOOLEAN"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "created_at",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "let_agreed",
+    "type": "BOOLEAN"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "let_agreed_at",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
     "name": "title",
     "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "room_only",
+    "type": "BOOLEAN"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "rent_per_person",
+    "type": "FLOAT"
   },
   {
     "mode": "NULLABLE",
@@ -138,30 +173,5 @@
     "mode": "NULLABLE",
     "name": "second_closest_station_mins",
     "type": "INTEGER"
-  },
-  {
-    "mode": "NULLABLE",
-    "name": "new_listing",
-    "type": "BOOLEAN"
-  },
-  {
-    "mode": "NULLABLE",
-    "name": "let_agreed_since_last_run",
-    "type": "BOOLEAN"
-  },
-  {
-    "mode": "NULLABLE",
-    "name": "created_at",
-    "type": "TIMESTAMP"
-  },
-  {
-    "mode": "NULLABLE",
-    "name": "let_agreed",
-    "type": "BOOLEAN"
-  },
-  {
-    "mode": "NULLABLE",
-    "name": "let_agreed_at",
-    "type": "TIMESTAMP"
   }
 ]

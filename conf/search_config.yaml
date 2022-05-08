@@ -3,10 +3,10 @@
 # It can contain multiple searches for flathunters looking in multiple areas
 
 search_001:
- term: Manor House, London
- area: 2
+ term: London
+ area: 25
 #  prices_min: 100
-#  prices_max: 3500
+#  prices_max: 100
 #  bedrooms_min: 3
 #  bedrooms_max: 4
 #  furnishedType: 1
