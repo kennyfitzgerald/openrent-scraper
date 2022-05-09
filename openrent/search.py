@@ -39,7 +39,7 @@ class Search():
         the conf/search_config.yaml file.
     """
 
-    def __init__(self, config_file, search_num, existing_data):
+    def __init__(self, config_file, search_num, existing_data=None):
         """ Initialise the search query. Also loads historical data for avoidance
             of repeated listings
 
@@ -165,6 +165,7 @@ class Search():
 
 
     def _get_listing_details(self, listing_id):
+        print(listing_id)
 
         def _extract_bool_from_html(html_list, ind):
 
@@ -177,6 +178,7 @@ class Search():
 
         self.driver.get(url)
         self.driver.implicitly_wait(2)
+        
         WebDriverWait(self.driver,20).until(EC.element_to_be_clickable((By.XPATH, MAPS_XPATH_SELECTOR))).click()
 
         time.sleep(1.5)
@@ -196,6 +198,9 @@ class Search():
 
         overview = soup.find_all("table", {"class":"table table-striped intro-stats"})[0]
         bedrooms, bathrooms, max_tenants, location  = [x.string for x in overview.find_all("strong")]
+        bedrooms = int(bedrooms)
+        bathrooms = int(bathrooms)
+        max_tenants = int(max_tenants)
         description = soup.find_all("div", {"class":"description"})[0].text
 
         features = soup.find_all("table", {"class":"table table-striped"})
@@ -214,7 +219,7 @@ class Search():
         availability = features[2].find_all("td")
         available_from = availability[1].text
         available_from_ts = datetime.now() if available_from=="Today" else parser.parse(available_from)
-        available_from_ts = available_from_ts.date
+        available_from_ts = available_from_ts.date()
         minimum_tenancy = availability[3].text
 
         additional_features = features[3].find_all("td")
@@ -224,13 +229,26 @@ class Search():
         furnished = additional_features[7].text
         epc_rating = additional_features[9].text
 
-        transport = [x.text.replace('\r', '').replace('\n', '').strip() for x in soup.find_all("table", {"class":"table table-striped mt-1"})[0].find_all('td', text=True)]
-        closest_station = transport[2]
-        closest_station_mins = int(transport[3].split(' ')[0])
-        second_closest_station = transport[4]
-        second_closest_station_mins = int(transport[5].split(' ')[0])
+        try:
+            transport = [x.text.replace('\r', '').replace('\n', '').strip() for x in soup.find_all("table", {"class":"table table-striped mt-1"})[0].find_all('td', text=True)]
+        except:
+            transport = list()
 
-        room_only = title.split(',')[0]=='Room in Shared House'
+        try:
+            closest_station = transport[2]
+            closest_station_mins = int(transport[3].split(' ')[0])
+        except:
+            closest_station = ''
+            closest_station_mins = ''
+        
+        try:
+            second_closest_station = transport[4]
+            second_closest_station_mins = int(transport[5].split(' ')[0])
+        except:
+            second_closest_station = ''
+            second_closest_station_mins = ''
+
+        room_only = title.split(',')[0]=='Room in a Shared House'
         rent_per_person = round(rent_total/int(bedrooms), 2) if not room_only else rent_total
         
         listing_details = {
@@ -271,7 +289,7 @@ class Search():
 
     def _update_records(self, new_results):
         
-        if not self.existing:
+        if self.existing is None:
             first_run = True
             self.existing = pd.DataFrame(
                 columns=list(new_results.columns)
@@ -347,6 +365,9 @@ class Search():
         # remove_cols
         final_results = final_results.loc[:,~final_results.columns.str.endswith('_existing')]
         final_results = final_results.loc[:,~final_results.columns.str.endswith('_new')]
+
+        # Convert available_from_ts to datetime
+        final_results['available_from_ts'] = final_results['available_from_ts'].apply(pd.to_datetime, format='%Y-%m-%d %H:%M:%S.%f', utc=True)
 
         # Sort results
         final_results = final_results.sort_values(by=['created_at'], ascending=False)
