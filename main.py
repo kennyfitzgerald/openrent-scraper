@@ -10,7 +10,7 @@ from google.cloud import bigquery
 from openrent.search import Search
 import openrent.bq_loader as bql
 
-if __name__ == "main":
+if __name__ == "__main__":
 
     if len(sys.argv) != 1:
         print('usage: bin/scrape <config>')
