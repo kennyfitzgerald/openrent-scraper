@@ -380,7 +380,7 @@ class Search():
         final_results = final_results.loc[:,~final_results.columns.str.endswith('_new')]
 
         # Convert available_from_ts to datetime
-        final_results['available_from_ts'] = final_results['available_from_ts'].apply(pd.to_datetime, format='%Y-%m-%d %H:%M:%S.%f', utc=True)
+        # final_results['available_from_ts'] = final_results['available_from_ts'].apply(pd.to_datetime, format='%Y-%m-%d %H:%M:%S.%f', utc=True)
 
         # Sort results
         final_results = final_results.sort_values(by=['created_at'], ascending=False)
