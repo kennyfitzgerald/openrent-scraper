@@ -115,7 +115,7 @@ class Search():
 
         html = self.driver.page_source
 
-        page = BeautifulSoup(html)
+        page = BeautifulSoup(html, features="lxml")
 
         self.driver.refresh()
         time.sleep(1)
@@ -197,7 +197,7 @@ class Search():
         lat = float(latlong[0])
         lng = float(latlong[1])
 
-        soup = BeautifulSoup(response)
+        soup = BeautifulSoup(response, features="lxml")
 
         title = soup.find_all("h1", {"class":"property-title"})[0].string
 
