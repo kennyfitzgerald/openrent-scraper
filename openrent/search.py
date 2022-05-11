@@ -353,11 +353,10 @@ class Search():
     def _update_new_listing_details(self, df):
 
         ids_to_update = list(df['id'][(df['new_listing']==True) & (df['historical']==False)])
-
         df = df.set_index('id')
+        d = self._get_listing_details(id)
 
         for id in ids_to_update:
-            d = self._get_listing_details(id)
             for key in d.keys():
                 if not key in df.columns:
                     df[key] = None
