@@ -244,14 +244,14 @@ class Search():
             closest_station_mins = int(transport[3].split(' ')[0])
         except:
             closest_station = ''
-            closest_station_mins = ''
+            closest_station_mins = None
         
         try:
             second_closest_station = transport[4]
             second_closest_station_mins = int(transport[5].split(' ')[0])
         except:
             second_closest_station = ''
-            second_closest_station_mins = ''
+            second_closest_station_mins = None
 
         room_only = title.split(',')[0]=='Room in a Shared House'
         rent_per_person = round(rent_total/int(bedrooms), 2) if not room_only else rent_total
