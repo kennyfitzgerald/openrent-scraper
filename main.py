@@ -41,6 +41,6 @@ if __name__ == "__main__":
 
     results = Search.search()
 
-    results.head()
+    print(results.head())
 
     bql.write_df_to_bq(results, 'schemas/openrent_listings.json', bq_table_ref, client)

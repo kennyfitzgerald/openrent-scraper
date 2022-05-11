@@ -363,6 +363,10 @@ class Search():
                     df[key] = None
                 df.loc[id, key] = d.get(key)
         
+        if not d[0] in df.columns:
+            print("Not found.")
+            df = df.reindex(columns = df.columns.tolist() + d)
+        
         return df
 
     def search(self):
