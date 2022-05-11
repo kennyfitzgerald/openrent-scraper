@@ -26,7 +26,7 @@ if __name__ == "__main__":
     bq_dataset_id = 'openrent'
     bq_table_id = 'openrent_listings'
 
-    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "C:/kenny-personal-projects-bq-sa.json"
+    # os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "C:/kenny-personal-projects-bq-sa.json"
 
     bq_table_ref = f'{bq_project}.{bq_dataset_id}.{bq_table_id}'
 
