@@ -1,37 +1,32 @@
 # TBC
 
-# results = pd.read_csv('data/results.csv')
-
-# filters = {
-#     "min_bedrooms":3,
-#     "max_bedrooms":5,
-#     "min_bathrooms":1,
-#     "max_bathrooms":1,
-#     "min_max_tenants":None,
-#     "min_deposit":None,
-#     "max_deposit":None,
-#     "room_only":False,
-#     "min_rent_per_person":1000,
-#     "max_rent_per_person":4000,
-#     "bills_included":False,
-#     "student_friendly":None,
-#     "families_allowed":None,
-#     "pets_allowed":None,
-#     "smokers_allowed":None,
-#     "dss_1ha_covers_rent":None,
-#     "available_from":None,
-#     "minimum_tenancy":None,
-#     "has_garden":None,
-#     "has_parking":None,
-#     "has_fireplace":None,
-#     "furnished":None,
-#     "epc_rating":None,
-#     "closest_station":['Finsbury Park', 'Seven Sisters', 'Stoke Newington'],
-#     "max_closest_station_mins":None,
-#     "new_listing":None,
-#     "let_agreed":False,
-# } 
-
-# results.query("bedrooms in [3, 4] & rent_total < 1000 & bills_included == True & created_at > '2022-04-30'")
-
-# results[results['id'].isin([1,2,3])]
+filters = {
+    "min_bedrooms":3,
+    "max_bedrooms":5,
+    "min_bathrooms":1,
+    "max_bathrooms":5,
+    "min_max_tenants":None,
+    "min_deposit":None,
+    "max_deposit":None,
+    "room_only":False,
+    "min_rent_per_person":1000,
+    "max_rent_per_person":4000,
+    "bills_included":False,
+    "student_friendly":None,
+    "families_allowed":None,
+    "pets_allowed":None,
+    "smokers_allowed":None,
+    "dss_1ha_covers_rent":None,
+    "min_available_from":None,
+    "max_available_from":None,
+    "minimum_tenancy":None,
+    "has_garden":None,
+    "has_parking":None,
+    "has_fireplace":None,
+    "furnished":None,
+    "epc_rating":None,
+    "list_closest_station":['Finsbury Park', 'Seven Sisters', 'Stoke Newington'],
+    "max_closest_station_mins":None,
+    "new_listing":True,
+    "let_agreed":None,
+} 

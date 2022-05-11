@@ -1,4 +1,5 @@
 # Standard library imports
+from base64 import encode
 import random
 import time
 import re
@@ -52,7 +53,6 @@ class Search():
         self.params = self.config.config
         self.driver = self._get_driver()
         self.url = self._encode_url(self.params)
-        self.results = self.search()
 
     def _get_driver(self):
 
@@ -124,19 +124,24 @@ class Search():
 
     def _parse_results(self, url):
         
-        page = self._pull_results(url)
+        page = self._pull_results(self.url)
 
         listings = page.select(ADVERTS_URLS_SELECTOR)
 
+        updates = [(x.text.split(' ')[5] in ['hour', 'minutes']) for x in page.select('div.timeStamp')]
+        
+        listings_updates = zip(listings, updates)
+
         results_parsed = []
 
-        for l in listings:
+        for l, u in listings_updates:
 
             result = {
                 "id":self._get_listing_id(l),
                 "created_at":datetime.now(timezone.utc),
                 "let_agreed":self._get_let_agreed(l),
-                "let_agreed_at":datetime.now(timezone.utc) if self._get_let_agreed(l) else None
+                "let_agreed_at":datetime.now(timezone.utc) if self._get_let_agreed(l) else None,
+                "recently_updated":u
             }
 
             results_parsed.append(result)
@@ -294,6 +299,10 @@ class Search():
             self.existing = pd.DataFrame(
                 columns=list(new_results.columns)
             ).astype(new_results.dtypes.to_dict())
+        else:
+            first_run = False
+            historical_ids = self.existing['id'][self.existing['historical']]
+            new_results = new_results[~new_results['id'].isin(historical_ids)]
 
         updated = pd.merge(self.existing, new_results, on='id', how='outer', suffixes=["_existing", "_new"])
 
@@ -304,8 +313,10 @@ class Search():
         if not first_run:
             updated['let_agreed_since_last_run'][~updated['new_listing']] = np.where((~updated['let_agreed_new'].isna()) & (updated['let_agreed_existing'].isna()), True, False)
             updated['let_agreed_since_last_run'].fillna(value=False, inplace=True)
+            updated['historical'].fillna(value=False, inplace=True)
         else:
             updated['let_agreed_since_last_run'] = False
+            updated['historical'] = ~new_results['recently_updated']
 
         # Update new records
         updated['created_at'] = np.where(updated['new_listing'], updated['created_at_new'], updated['created_at_existing'])
@@ -341,7 +352,7 @@ class Search():
     
     def _update_new_listing_details(self, df):
 
-        ids_to_update = list(df['id'][df['new_listing']==True])
+        ids_to_update = list(df['id'][(df['new_listing']==True) & (df['historical']==False)])
 
         df = df.set_index('id')
 
@@ -358,6 +369,8 @@ class Search():
 
         parsed_results = self._parse_results(self.url)
 
+        parsed_results.to_csv('test.csv')
+
         updated_results = self._update_records(parsed_results)
 
         final_results = self._update_new_listing_details(updated_results)
@@ -373,3 +386,7 @@ class Search():
         final_results = final_results.sort_values(by=['created_at'], ascending=False)
 
         return final_results
+
+
+# with open('test.txt', 'w', encoding='utf-8') as f:
+#     f.write(str(page))
