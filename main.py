@@ -10,7 +10,7 @@ from google.cloud import bigquery
 from openrent.search import Search
 import openrent.bq_loader as bql
 
-if __name__ == "__main__":
+if __name__ == "__main__Z":
 
     if len(sys.argv) != 1:
         print('usage: bin/scrape <config>')
@@ -18,9 +18,13 @@ if __name__ == "__main__":
 
     # Load existing data from BigQuery
 
-    bq_project = os.environ['PROJECT_ID']
-    bq_dataset_id = os.environ['DATASET_ID']
-    bq_table_id = os.environ['TABLE_ID']
+    # bq_project = os.environ['PROJECT_ID']
+    # bq_dataset_id = os.environ['DATASET_ID']
+    # bq_table_id = os.environ['TABLE_ID']
+
+    bq_project = 'kenny-personal-projects'
+    bq_dataset_id = 'openrent'
+    bq_table_id = 'openrent_listings'
 
     bq_table_ref = f'{bq_project}.{bq_dataset_id}.{bq_table_id}'
 
