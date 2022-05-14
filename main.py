@@ -19,9 +19,13 @@ if __name__ == "__main__":
 
     # Load existing data from BigQuery
 
-    bq_project = os.environ['PROJECT_ID']
-    bq_dataset_id = os.environ['DATASET_ID']
-    bq_table_id = os.environ['TABLE_ID']
+    # bq_project = os.environ['PROJECT_ID']
+    # bq_dataset_id = os.environ['DATASET_ID']
+    # bq_table_id = os.environ['TABLE_ID']
+
+    bq_project = 'kenny-personal-projects'
+    bq_dataset_id = 'openrent'
+    bq_table_id = 'openrent_listings'
 
     bq_table_ref = f'{bq_project}.{bq_dataset_id}.{bq_table_id}'
 
@@ -29,6 +33,7 @@ if __name__ == "__main__":
 
     try:
         existing_data = bql.read_df_from_bq(bq_table_ref, client)
+        # existing_data = pd.read_csv('test.csv')
     except:
         existing_data=None
     
