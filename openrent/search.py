@@ -148,6 +148,9 @@ class Search():
         
         results_parsed = pd.DataFrame(results_parsed)
 
+        if self.existing is None:
+            results_parsed['historical'] = ~results_parsed['recently_updated']
+
         results_parsed = results_parsed.reset_index(drop=True).convert_dtypes()
         
         return results_parsed
@@ -170,7 +173,6 @@ class Search():
 
 
     def _get_listing_details(self, listing_id):
-        print(listing_id)
 
         def _extract_bool_from_html(html_list, ind):
 
@@ -224,7 +226,7 @@ class Search():
         availability = features[2].find_all("td")
         available_from = availability[1].text
         available_from_ts = datetime.now() if available_from=="Today" else parser.parse(available_from)
-        available_from_ts = available_from_ts.date()
+        available_from_ts = str(available_from_ts.date())
         minimum_tenancy = availability[3].text
 
         additional_features = features[3].find_all("td")
@@ -298,7 +300,8 @@ class Search():
             first_run = True
             self.existing = pd.DataFrame(
                 columns=list(new_results.columns)
-            ).astype(new_results.dtypes.to_dict())
+            ).astype(new_results.dtypes.to_dict()
+            ).drop('historical', axis=1)
         else:
             first_run = False
             historical_ids = self.existing['id'][self.existing['historical']]
@@ -316,7 +319,6 @@ class Search():
             updated['historical'].fillna(value=False, inplace=True)
         else:
             updated['let_agreed_since_last_run'] = False
-            updated['historical'] = ~new_results['recently_updated']
 
         # Update new records
         updated['created_at'] = np.where(updated['new_listing'], updated['created_at_new'], updated['created_at_existing'])
@@ -361,20 +363,17 @@ class Search():
                 if not key in df.columns:
                     df[key] = None
                 df.loc[id, key] = d.get(key)
-        
-        if not d[0] in df.columns:
-            print("Not found.")
-            df = df.reindex(columns = df.columns.tolist() + d)
-        
+                
         return df
 
     def search(self):
 
         parsed_results = self._parse_results(self.url)
 
-        parsed_results.to_csv('test.csv')
-
         updated_results = self._update_records(parsed_results)
+
+        if len(updated_results[(updated_results['new_listing']==True) & (updated_results['historical']==False)])==0:
+            return None
 
         final_results = self._update_new_listing_details(updated_results)
 
@@ -383,13 +382,9 @@ class Search():
         final_results = final_results.loc[:,~final_results.columns.str.endswith('_new')]
 
         # Convert available_from_ts to datetime
-        # final_results['available_from_ts'] = final_results['available_from_ts'].apply(pd.to_datetime, format='%Y-%m-%d %H:%M:%S.%f', utc=True)
+        final_results['available_from_ts'] = final_results['available_from_ts'].apply(pd.to_datetime, format='%Y-%m-%d', utc=True)
 
         # Sort results
         final_results = final_results.sort_values(by=['created_at'], ascending=False)
 
         return final_results
-
-
-# with open('test.txt', 'w', encoding='utf-8') as f:
-#     f.write(str(page))

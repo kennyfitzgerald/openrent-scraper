@@ -131,6 +131,11 @@
   },
   {
     "mode": "NULLABLE",
+    "name": "available_from_ts",
+    "type": "DATE"
+  },
+  {
+    "mode": "NULLABLE",
     "name": "minimum_tenancy",
     "type": "STRING"
   },
