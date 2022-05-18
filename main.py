@@ -44,7 +44,7 @@ if __name__ == "__main__":
 
         email = Emailer('conf/email_config.yaml', results)
 
-        email.filtered_results
+        print(email.filtered_results)
         
         if len(email.filtered_results) != 0:
             email.send_gmail()
