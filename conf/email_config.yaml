@@ -1,32 +1,35 @@
-# TBC
 
-filters = {
-    "min_bedrooms":3,
-    "max_bedrooms":5,
-    "min_bathrooms":1,
-    "max_bathrooms":5,
-    "min_max_tenants":None,
-    "min_deposit":None,
-    "max_deposit":None,
-    "room_only":False,
-    "min_rent_per_person":1000,
-    "max_rent_per_person":4000,
-    "bills_included":False,
-    "student_friendly":None,
-    "families_allowed":None,
-    "pets_allowed":None,
-    "smokers_allowed":None,
-    "dss_1ha_covers_rent":None,
-    "min_available_from":None,
-    "max_available_from":None,
-    "minimum_tenancy":None,
-    "has_garden":None,
-    "has_parking":None,
-    "has_fireplace":None,
-    "furnished":None,
-    "epc_rating":None,
-    "list_closest_station":['Finsbury Park', 'Seven Sisters', 'Stoke Newington'],
-    "max_closest_station_mins":None,
-    "new_listing":True,
-    "let_agreed":None,
-} 
+gmail_server: smtp.gmail.com
+gmail_port: 465
+gmail_user: !ENV ${EMAIL_USER}
+gmail_password: !ENV ${EMAIL_PASS}
+gmail_receiver: !ENV ${EMAIL_RECEIVERS}
+filters:
+ min_bedrooms: 3
+ max_bedrooms: 5
+ min_bathrooms: 
+ max_bathrooms: 
+ min_max_tenants: 
+ min_deposit: 
+ max_deposit: 
+ room_only: False
+ min_rent_per_person: 
+ max_rent_per_person: 900
+ bills_included: 
+ student_friendly: 
+ families_allowed: 
+ pets_allowed: 
+ smokers_allowed: 
+ dss_1ha_covers_rent: 
+ min_available_from: 
+ max_available_from: 
+ minimum_tenancy: 
+ has_garden: 
+ has_parking: 
+ has_fireplace: 
+ furnished: 
+ epc_rating: 
+ list_closest_station: ["Finsbury Park", "Seven Sisters", "Stoke Newington", "Harringay", "Harringay Green Lanes", "Hackney Central", "Highbury & Islington", "Turnpike Lane", "Tottenham Hale", "Walthamstow Central", "Blackhorse Road", "Archway", "Crouch Hill", "Arsenal", "Drayton Park", "Stoke Newington", "Clapton", "Hackney Downs", "Bethnal Green", "Stratford", "Mile End", "Old Street", "Tufnell Park", "Bermondsey"]
+ max_closest_station_mins: 12
+ new_listing: True
+ let_agreed: 

@@ -40,7 +40,6 @@ class ConfigLoader():
             raise FileNotFoundError("Failed to open file: " + config_file)
 
         if search_number is not None:
-            print(search_number)
             config = list(config.values())[search_number]
         
         return config
