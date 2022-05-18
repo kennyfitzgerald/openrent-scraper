@@ -10,6 +10,7 @@ import pandas as pd
 # Local library imports
 from openrent.search import Search
 import openrent.bq_loader as bql
+from openrent.email import Emailer
 
 if __name__ == "__main__":
 
@@ -18,10 +19,6 @@ if __name__ == "__main__":
         sys.exit(0)
 
     # Load existing data from BigQuery
-
-    # bq_project = os.environ['PROJECT_ID']
-    # bq_dataset_id = os.environ['DATASET_ID']
-    # bq_table_id = os.environ['TABLE_ID']
 
     bq_project = 'kenny-personal-projects'
     bq_dataset_id = 'openrent'
@@ -33,12 +30,22 @@ if __name__ == "__main__":
 
     try:
         existing_data = bql.read_df_from_bq(bq_table_ref, client)
-        # existing_data = pd.read_csv('test.csv')
     except:
         existing_data=None
     
     srch = Search('conf/search_config.yaml', 0, existing_data)
 
     results = srch.search()
+    
+    if results is not None:
+        bql.write_df_to_bq(results, 'schemas/openrent_listings.json', bq_table_ref, client)
 
-    bql.write_df_to_bq(results, 'schemas/openrent_listings.json', bq_table_ref, client)
+        email = Emailer('conf/email_config.yaml', results)
+
+        email.filtered_results
+        
+        if len(email.filtered_results) != 0:
+            email.send_gmail()
+
+    else:
+        print('No new results found.')
