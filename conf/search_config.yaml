@@ -3,8 +3,8 @@
 # It can contain multiple searches for flathunters looking in multiple areas
 
 search_001:
- term: Seven Sisters, London
- area: 2
+ term: London
+ area: 25
 #  prices_min: 100
 #  prices_max: 100
 #  bedrooms_min: 3
