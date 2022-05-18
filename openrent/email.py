@@ -14,7 +14,7 @@ class Emailer:
         # Create a new instance of the ConfigLoader class
         self.config_loader = ConfigLoader(config_file)
         self.filtered_results = self._filter_results(df)
-        self.html = self._create_html()
+        self.html = self._create_html(self.filtered_results)
 
     def _get_item(self, config_item):
         """ Get the value of an item from the config file.
@@ -45,17 +45,18 @@ class Emailer:
 
         query_string = ' & '.join([f'({c} {o} {v})' for c, o, v in zip(columns, operators, values)])
 
-        df = df.query(query_string)
+        df = df.convert_dtypes()
+        df = df.query(query_string, engine='python')
 
         return df
     
-    def _create_html(self):
+    def _create_html(self, df):
 
         results = []
-        for row in range(0, len(self.filtered_results)):
-            link = f"<p><a href=\"https://openrent.co.uk/{df.loc[row]['id']}\">{df.loc[row]['bedrooms']} Bed, {round(df.loc[row]['rent_per_person'], 0)} PP, {df.loc[row]['closest_station_mins']} Minutes from {df.loc[row]['closest_station']} OR {df.loc[row]['second_closest_station_mins']} Minutes from {df.loc[row]['second_closest_station']}</a></p>"
+        for row in range(0, len(df)):
+            link = f"<p><a href=\"https://openrent.co.uk/{df.iloc[row]['id']}\">{df.iloc[row]['bedrooms']} Bed, {round(df.iloc[row]['rent_per_person'], 0)} PP, {df.iloc[row]['closest_station_mins']} Minutes from {df.iloc[row]['closest_station']} OR {df.iloc[row]['second_closest_station_mins']} Minutes from {df.iloc[row]['second_closest_station']}</a></p>"
             results.append(link)
-        
+
         return '\n'.join(results)
 
     def send_gmail(self):

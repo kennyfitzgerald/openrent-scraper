@@ -24,6 +24,8 @@ if __name__ == "__main__":
     bq_dataset_id = 'openrent'
     bq_table_id = 'openrent_listings'
 
+    # os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "C:/gasa.json"
+
     bq_table_ref = f'{bq_project}.{bq_dataset_id}.{bq_table_id}'
 
     client = bigquery.Client()
