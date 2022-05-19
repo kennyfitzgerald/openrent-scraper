@@ -5,8 +5,8 @@ gmail_user: !ENV ${EMAIL_USER}
 gmail_password: !ENV ${EMAIL_PASS}
 gmail_receiver: !ENV ${EMAIL_RECEIVERS}
 filters:
- min_bedrooms: 
- max_bedrooms: 
+ min_bedrooms: 3
+ max_bedrooms: 5
  min_bathrooms: 
  max_bathrooms: 
  min_max_tenants: 
