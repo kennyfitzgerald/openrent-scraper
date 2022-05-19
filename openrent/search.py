@@ -255,7 +255,7 @@ class Search():
             second_closest_station = ''
             second_closest_station_mins = None
 
-        room_only = title.split(',')[0]=='Room in a Shared House'
+        room_only = title.split(',')[0] in ['Room in a Shared House', 'Room in a Shared Flat']
         rent_per_person = round(rent_total/int(bedrooms), 2) if not room_only else rent_total
         
         listing_details = {
