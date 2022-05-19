@@ -10,9 +10,10 @@ jobs:
   run_searches:
 
     name: Run Openrent Searches and email results
-    # env: 
-    #   GMAIL_KENNY: ${{ secrets.GMAIL_KENNY }}
-    #   GMAIL_KENNY_PASS: ${{ secrets.GMAIL_KENNY_PASS }}
+    env: 
+      EMAIL_USER: ${{ secrets.EMAIL_USER }}
+      EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+      EMAIL_RECEIVERS: ${{ secrets.EMAIL_RECEIVERS }}
 
     runs-on: ubuntu-latest
     permissions:

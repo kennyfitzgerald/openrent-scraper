@@ -76,6 +76,7 @@ class Emailer:
         gmail_user = self._get_item('gmail_user')
         gmail_password = self._get_item('gmail_password')
         gmail_receiver = self._get_item('gmail_receiver')
+        gmail_receiver = ','.join(gmail_receiver) if isinstance(gmail_receiver, list) else gmail_receiver
         gmail_subject = f'Openrent search results'
 
         msg = MIMEMultipart('alternative')
