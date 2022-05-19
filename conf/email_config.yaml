@@ -29,7 +29,7 @@ filters:
  has_fireplace: 
  furnished: 
  epc_rating: 
- list_closest_station: ["Finsbury Park", "Seven Sisters", "Stoke Newington", "Harringay", "Harringay Green Lanes", "Hackney Central", "Highbury & Islington", "Turnpike Lane", "Tottenham Hale", "Walthamstow Central", "Blackhorse Road", "Archway", "Crouch Hill", "Arsenal", "Drayton Park", "Stoke Newington", "Clapton", "Hackney Downs", "Bethnal Green", "Stratford", "Mile End", "Old Street", "Tufnell Park", "Bermondsey", "Hornsey", "Camden Road", "Canonbury", "Dalston Junction", "Dalston Kingsland", "Rectory Road", "St James Street", "Walthamstow Queens Road", "Bruce Grove", "Holloway Road", "Leyton", "Maryland", "Bow Road", "Stepney Green", "Whitechapel", "Aldgate East", "Cambridge Heath", "London Fields", "Hackney Wick"]
+ list_closest_station: ["Finsbury Park", "Seven Sisters", "Stoke Newington", "Harringay", "Harringay Green Lanes", "Hackney Central", "Highbury & Islington", "Turnpike Lane", "Tottenham Hale", "Walthamstow Central", "Blackhorse Road", "Archway", "Crouch Hill", "Arsenal", "Drayton Park", "Stoke Newington", "Clapton", "Hackney Downs", "Bethnal Green", "Stratford", "Mile End", "Old Street", "Tufnell Park", "Bermondsey", "Hornsey", "Camden Road", "Canonbury", "Dalston Junction", "Dalston Kingsland", "Rectory Road", "St James Street", "Walthamstow Queens Road", "Bruce Grove", "Holloway Road", "Leyton", "Maryland", "Bow Road", "Stepney Green", "Whitechapel", "Aldgate East", "Cambridge Heath", "London Fields", "Hackney Wick", "Hoxton", "Shoreditch High Street", "Haggerston"]
  max_closest_station_mins: 12
  new_listing: True
  let_agreed: 

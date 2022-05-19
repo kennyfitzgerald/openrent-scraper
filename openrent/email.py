@@ -33,6 +33,8 @@ class Emailer:
         
     def _filter_results(self, df):
         """ Takes dataframe and filters according to specified filters in config """
+
+        df = df.reset_index()
         
         filters = self._get_item('filters')
 
@@ -53,8 +55,9 @@ class Emailer:
     def _create_html(self, df):
 
         results = []
+        print(df)
         for row in range(0, len(df)):
-            link = f"<p><a href=\"https://openrent.co.uk/{df.iloc[row]['id']}\">{df.iloc[row]['bedrooms']} Bed, {round(df.iloc[row]['rent_per_person'], 0)} PP, {df.iloc[row]['closest_station_mins']} Minutes from {df.iloc[row]['closest_station']} OR {df.iloc[row]['second_closest_station_mins']} Minutes from {df.iloc[row]['second_closest_station']}</a></p>"
+            link = f"<p><a href=\"https://openrent.co.uk/{df.iloc[row]['id']}\">{df.iloc[row]['bedrooms']} Bed, {round(df.iloc[row]['rent_per_person'])} PP, {df.iloc[row]['closest_station_mins']} Minutes from {df.iloc[row]['closest_station']} or {df.iloc[row]['second_closest_station_mins']} Minutes from {df.iloc[row]['second_closest_station']}</a></p>"
             results.append(link)
 
         return '\n'.join(results)
